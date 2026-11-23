@@ -1,0 +1,12 @@
+export const categories = ["All", "Creams", "Face Washes", "Lip Balms", "Nail Polish"];
+
+export const products = [
+  { id: 1, name: "Rose Glow Face Cream", category: "Creams", price: 2450, description: "A lightweight daily moisturising cream that leaves skin feeling soft and refreshed.", image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=900&q=85", tag: "Bestseller" },
+  { id: 2, name: "Hydra Comfort Cream", category: "Creams", price: 2850, description: "A comforting cream for a smooth, hydrated-feeling finish.", image: "https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=900&q=85" },
+  { id: 3, name: "Gentle Daily Cleanser", category: "Face Washes", price: 1750, description: "A gentle daily cleanser that helps wash away everyday impurities.", image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=900&q=85", tag: "Popular" },
+  { id: 4, name: "Fresh Foam Face Wash", category: "Face Washes", price: 1950, description: "A refreshing foaming wash for your morning and evening routine.", image: "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&w=900&q=85" },
+  { id: 5, name: "Peach Nourish Lip Balm", category: "Lip Balms", price: 850, description: "A pocket-sized lip balm for a soft, comfortable feel.", image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=900&q=85" },
+  { id: 6, name: "Berry Tint Lip Balm", category: "Lip Balms", price: 950, description: "A subtle berry tint with a smooth balm texture.", image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=900&q=85" },
+  { id: 7, name: "Blush Rose Nail Colour", category: "Nail Polish", price: 1250, description: "A soft rose shade for a simple, polished look.", image: "https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&w=900&q=85" },
+  { id: 8, name: "Classic Red Nail Colour", category: "Nail Polish", price: 1250, description: "A classic red nail colour for a bold pop of colour.", image: "https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=900&q=85" }
+];
