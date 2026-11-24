@@ -1,10 +1,13 @@
 
+import logging
+import os
+
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
+from sqlalchemy import text
 
 from config import Config
 from extensions import db
-
 from models import User
 
 from routes.auth import auth_bp
@@ -13,140 +16,121 @@ from routes.categories import categories_bp
 from routes.cart import cart_bp
 from routes.orders import orders_bp
 from routes.services import services_bp
+from routes.therapists import therapists_bp
+from routes.appointments import appointments_bp
+from routes.payments import payments_bp
+from routes.notifications import notifications_bp
 
 
-# =====================================
-# CREATE FLASK APPLICATION
-# =====================================
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
 
-app = Flask(__name__)
+    # In production, CloudFront routes /api/* to this application.
+    # CORS is enabled only for the local Vite development origin.
+    if os.getenv("FLASK_ENV", "development") == "development":
+        from flask_cors import CORS
 
-app.config.from_object(Config)
+        CORS(
+            app,
+            resources={
+                r"/api/*": {
+                    "origins": [
+                        "http://localhost:5173",
+                        "http://127.0.0.1:5173",
+                    ]
+                }
+            },
+        )
 
+    db.init_app(app)
+    JWTManager(app)
 
-# =====================================
-# INITIALIZE EXTENSIONS
-# =====================================
+    # Register API blueprints
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(products_bp, url_prefix="/api/products")
+    app.register_blueprint(categories_bp, url_prefix="/api/categories")
+    app.register_blueprint(cart_bp, url_prefix="/api/cart")
+    app.register_blueprint(orders_bp, url_prefix="/api/orders")
+    app.register_blueprint(services_bp, url_prefix="/api/services")
+    app.register_blueprint(therapists_bp, url_prefix="/api/therapists")
+    app.register_blueprint(
+        appointments_bp,
+        url_prefix="/api/appointments",
+    )
+    app.register_blueprint(
+        payments_bp,
+        url_prefix="/api/payments",
+    )
+    app.register_blueprint(
+        notifications_bp,
+        url_prefix="/api/notifications",
+    )
 
-db.init_app(app)
+    # Home endpoint
+    @app.get("/")
+    def home():
+        return jsonify({
+            "status": "success",
+            "message": "E-commerce API",
+            "health": "/api/health",
+        })
 
-jwt = JWTManager(app)
+    # Health check
+    @app.get("/api/health")
+    def health():
+        return jsonify({
+            "status": "success",
+            "message": "Backend is running",
+        })
 
+    # Database readiness check
+    @app.get("/api/ready")
+    def ready():
+        try:
+            db.session.execute(text("SELECT 1"))
 
-# =====================================
-# DATABASE DIAGNOSTIC
-# =====================================
+            return jsonify({
+                "status": "ready",
+                "database": "connected",
+            }), 200
 
-def check_database():
+        except Exception:
+            db.session.rollback()
+            logging.exception("Readiness check failed")
 
-    print("\n========== DATABASE CHECK ==========")
+            return jsonify({
+                "status": "not_ready",
+                "database": "unavailable",
+            }), 503
 
-    try:
-
-        with app.app_context():
-
+    # Database startup diagnostic
+    with app.app_context():
+        try:
+            print("\n========== DATABASE CHECK ==========")
             print("Database:", db.engine.url.database)
             print("Host:", db.engine.url.host)
             print("Users table:", User.__tablename__)
+            print("Existing users:", User.query.count())
+            print("====================================\n")
 
-            user_count = User.query.count()
+        except Exception as exc:
+            db.session.rollback()
 
-            print("Existing users:", user_count)
+            logging.warning(
+                "Database diagnostic unavailable during startup: %s",
+                exc,
+            )
 
-    except Exception as error:
-
-        print("Database connection unavailable:", error)
-
-    print("====================================\n")
-
-
-# Run diagnostic without preventing application startup
-check_database()
+    return app
 
 
-# =====================================
-# REGISTER API BLUEPRINTS
-# =====================================
+app = create_app()
 
-app.register_blueprint(
-    auth_bp,
-    url_prefix="/api/auth"
-)
-
-app.register_blueprint(
-    products_bp,
-    url_prefix="/api/products"
-)
-
-app.register_blueprint(
-    categories_bp,
-    url_prefix="/api/categories"
-)
-
-app.register_blueprint(
-    cart_bp,
-    url_prefix="/api/cart"
-)
-
-app.register_blueprint(
-    orders_bp,
-    url_prefix="/api/orders"
-)
-
-app.register_blueprint(
-    services_bp,
-    url_prefix="/api/services"
-)
-
-
-# =====================================
-# HOME ENDPOINT
-# =====================================
-
-@app.route("/", methods=["GET"])
-def home():
-
-    return jsonify({
-        "status": "success",
-        "message": "Welcome to the E-commerce API",
-        "health": "/api/health"
-    }), 200
-
-
-# =====================================
-# HEALTH CHECK
-# =====================================
-
-@app.route("/api/health", methods=["GET"])
-def health():
-
-    return jsonify({
-        "status": "success",
-        "message": "E-commerce backend is running"
-    }), 200
-
-
-# =====================================
-# PRINT REGISTERED ROUTES
-# =====================================
-
-print("\n========== REGISTERED ROUTES ==========")
-
-for rule in app.url_map.iter_rules():
-
-    print(f"{rule} -> {rule.endpoint}")
-
-print("=======================================\n")
-
-
-# =====================================
-# RUN LOCAL DEVELOPMENT SERVER
-# =====================================
 
 if __name__ == "__main__":
-
     app.run(
         host="127.0.0.1",
         port=5000,
-        debug=True
+        debug=True,
     )

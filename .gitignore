@@ -1,0 +1,28 @@
+# Secrets
+.env
+.env.*
+!.env.example
+!frontend/.env.production
+backend/.env
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Node / Vite
+node_modules/
+dist/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs and local backups
+*.log
+*.bak
+*.dump
+db/Dump*.sql

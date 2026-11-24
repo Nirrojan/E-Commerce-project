@@ -1,11 +1,153 @@
-import React from "react";
-import { useState } from "react";
+
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
 import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
 import { formatPrice } from "../components/ProductCard";
-export default function Payment(){const {items,total,clearCart}=useCart();const {user}=useAuth();const navigate=useNavigate();const [success,setSuccess]=useState(false);const [error,setError]=useState("");
- function pay(e){e.preventDefault();if(!items.length)return setError("Your cart is empty.");const orders=JSON.parse(localStorage.getItem("bb_orders")||"[]");orders.unshift({id:Date.now(),userId:user.id,items,total,status:"Demo payment successful",date:new Date().toISOString()});localStorage.setItem("bb_orders",JSON.stringify(orders));clearCart();setSuccess(true);}
- if(success)return <div className="container py-5"><div className="success-panel"><div className="success-icon"><i className="bi bi-check-lg"></i></div><span className="eyebrow">ORDER CONFIRMED</span><h1 className="section-title mt-2">Thank you for your order!</h1><p className="text-muted">Your demo order has been saved to your purchase history.</p><Link to="/my-purchases" className="btn btn-dark mt-3">View my purchases</Link></div></div>;
- return <div className="container py-5"><span className="eyebrow">FINAL STEP</span><h1 className="section-title mt-2 mb-4">Payment</h1>{!items.length?<div className="empty-state">No items to pay for. <Link to="/products">Browse products</Link></div>:<div className="row g-4"><div className="col-lg-7"><div className="summary-card"><h4 className="serif mb-3">Demo payment form</h4><div className="alert alert-warning small">Demo only. Do not enter real card details. This form does not contact a bank or payment provider.</div>{error&&<div className="alert alert-danger">{error}</div>}<form onSubmit={pay}><label className="form-label">Cardholder name</label><input className="form-control mb-3" required placeholder="Name on card"/><label className="form-label">Demo card number</label><input className="form-control mb-3" required minLength="12" maxLength="19" placeholder="Any 12–19 digits" inputMode="numeric"/><div className="row"><div className="col-6"><label className="form-label">Expiry</label><input className="form-control mb-3" required placeholder="MM/YY"/></div><div className="col-6"><label className="form-label">Security code</label><input className="form-control mb-3" required minLength="3" maxLength="4" placeholder="Demo CVV"/></div></div><button className="btn btn-dark btn-lg w-100">Simulate successful payment</button></form></div></div><div className="col-lg-5"><div className="summary-card"><h4 className="serif">Order total</h4>{items.map(i=><div className="d-flex justify-content-between small mt-3" key={i.id}><span>{i.name} × {i.quantity}</span><span>{formatPrice(i.price*i.quantity)}</span></div>)}<hr/><div className="d-flex justify-content-between"><strong>Total</strong><strong>{formatPrice(total)}</strong></div></div></div></div>}</div>;
+import { authApiRequest } from "../lib/api";
+
+export default function Payment() {
+  const { items, total } = useCart();
+  const navigate = useNavigate();
+
+  const [address, setAddress] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function continueToCardPayment(e) {
+    e.preventDefault();
+    setError("");
+
+    if (!items.length) {
+      setError("Your cart is empty.");
+      return;
+    }
+
+    if (!address.trim()) {
+      setError("Please enter your delivery address.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const data = await authApiRequest("/orders/", {
+        method: "POST",
+        body: JSON.stringify({
+          shipping_address: address.trim(),
+          items: items.map(item => ({
+            product_id: item.id,
+            quantity: item.quantity
+          }))
+        })
+      });
+
+      if (!data.order?.id) {
+        throw new Error("Unable to create your pending order.");
+      }
+
+      navigate(`/card-payment/${data.order.id}`, {
+        state: {
+          order: data.order
+        }
+      });
+    } catch (err) {
+      setError(err.message || "Unable to continue to payment.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="container py-5">
+      <span className="eyebrow">CHECKOUT</span>
+
+      <h1 className="section-title mt-2 mb-4">
+        Delivery details
+      </h1>
+
+      {!items.length ? (
+        <div className="empty-state">
+          Your cart is empty.{" "}
+          <Link to="/products">Browse products</Link>
+        </div>
+      ) : (
+        <div className="row g-4">
+          <div className="col-lg-7">
+            <div className="summary-card">
+              <h4 className="serif mb-3">
+                Delivery address
+              </h4>
+
+              {error && (
+                <div className="alert alert-danger">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={continueToCardPayment}>
+                <label
+                  className="form-label"
+                  htmlFor="shippingAddress"
+                >
+                  Full delivery address
+                </label>
+
+                <textarea
+                  id="shippingAddress"
+                  className="form-control mb-4"
+                  rows="5"
+                  required
+                  maxLength={2000}
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                  placeholder="Enter your full delivery address"
+                />
+
+                <button
+                  type="submit"
+                  className="btn btn-dark btn-lg w-100"
+                  disabled={loading}
+                >
+                  {loading
+                    ? "Creating order..."
+                    : "Continue to card payment"}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div className="col-lg-5">
+            <div className="summary-card">
+              <h4 className="serif">
+                Order summary
+              </h4>
+
+              {items.map(item => (
+                <div
+                  className="d-flex justify-content-between small mt-3"
+                  key={item.id}
+                >
+                  <span>
+                    {item.name} × {item.quantity}
+                  </span>
+
+                  <span>
+                    {formatPrice(item.price * item.quantity)}
+                  </span>
+                </div>
+              ))}
+
+              <hr />
+
+              <div className="d-flex justify-content-between">
+                <strong>Total</strong>
+                <strong>{formatPrice(total)}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

@@ -1,7 +1,102 @@
+
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../components/ProductCard";
-export default function Checkout(){const {items,total}=useCart();const navigate=useNavigate();function proceed(){if(items.length)navigate("/payment");}
- return <div className="container py-5"><span className="eyebrow">ALMOST YOURS</span><h1 className="section-title mt-2 mb-4">Checkout</h1>{!items.length?<div className="empty-state">Your cart is empty. <Link to="/products">Shop now</Link></div>:<div className="row g-4"><div className="col-lg-7"><div className="summary-card"><h4 className="serif mb-4">Your items</h4>{items.map(i=><div className="checkout-item" key={i.id}><img src={i.image} alt={i.name}/><div className="flex-grow-1"><strong>{i.name}</strong><div className="small text-muted">Quantity: {i.quantity}</div></div><strong>{formatPrice(i.price*i.quantity)}</strong></div>)}</div></div><div className="col-lg-5"><div className="summary-card"><h4 className="serif">Payment summary</h4><div className="d-flex justify-content-between mt-4"><span>Subtotal</span><span>{formatPrice(total)}</span></div><div className="d-flex justify-content-between mt-2"><span>Delivery</span><span>To be confirmed</span></div><hr/><div className="d-flex justify-content-between mb-4"><strong>Total</strong><strong className="fs-5">{formatPrice(total)}</strong></div><button className="btn btn-dark btn-lg w-100" onClick={proceed}>Continue to payment</button><p className="small text-muted mt-3 mb-0">This demo uses a simulated payment flow, not a real card transaction.</p></div></div></div>}</div>;
+
+export default function Checkout() {
+  const { items, total } = useCart();
+  const navigate = useNavigate();
+
+  function proceed() {
+    if (items.length) {
+      navigate("/payment");
+    }
+  }
+
+  return (
+    <div className="container py-5">
+      <span className="eyebrow">ALMOST YOURS</span>
+
+      <h1 className="section-title mt-2 mb-4">
+        Checkout
+      </h1>
+
+      {!items.length ? (
+        <div className="empty-state">
+          Your cart is empty.{" "}
+          <Link to="/products">Shop now</Link>
+        </div>
+      ) : (
+        <div className="row g-4">
+          <div className="col-lg-7">
+            <div className="summary-card">
+              <h4 className="serif mb-4">
+                Your items
+              </h4>
+
+              {items.map(item => (
+                <div
+                  className="checkout-item"
+                  key={item.id}
+                >
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                  />
+
+                  <div className="flex-grow-1">
+                    <strong>{item.name}</strong>
+
+                    <div className="small text-muted">
+                      Quantity: {item.quantity}
+                    </div>
+                  </div>
+
+                  <strong>
+                    {formatPrice(item.price * item.quantity)}
+                  </strong>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="col-lg-5">
+            <div className="summary-card">
+              <h4 className="serif">
+                Payment summary
+              </h4>
+
+              <div className="d-flex justify-content-between mt-4">
+                <span>Subtotal</span>
+                <span>{formatPrice(total)}</span>
+              </div>
+
+              <div className="d-flex justify-content-between mt-2">
+                <span>Delivery</span>
+                <span>To be confirmed</span>
+              </div>
+
+              <hr />
+
+              <div className="d-flex justify-content-between mb-4">
+                <strong>Total</strong>
+                <strong className="fs-5">
+                  {formatPrice(total)}
+                </strong>
+              </div>
+
+              <button
+                className="btn btn-dark btn-lg w-100"
+                onClick={proceed}
+              >
+                Continue to payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

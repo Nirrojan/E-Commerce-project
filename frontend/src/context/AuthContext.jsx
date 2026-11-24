@@ -6,9 +6,11 @@ import React, {
   useEffect
 } from "react";
 
+import { apiUrl } from "../lib/api";
+
 const AuthContext = createContext(null);
 
-const API_URL = "http://127.0.0.1:5000/api/auth";
+const API_URL = apiUrl("/auth");
 
 const TOKEN_KEY = "bb_access_token";
 const CURRENT_KEY = "bb_current_user";

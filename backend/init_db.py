@@ -1,48 +1,30 @@
+"""Database verification helper.
+
+Run the SQL migration and demo seed scripts in db/ first. db.create_all()
+does not alter existing MySQL tables, so it is not a substitute for migration.
+"""
+from sqlalchemy import inspect, text
 
 from app import app
 from extensions import db
-from models import Category, Product
+
+REQUIRED_TABLES = [
+    "users", "categories", "products", "services",
+    "therapists", "therapist_services", "therapist_schedules",
+    "therapist_schedule_exceptions", "appointments",
+    "appointment_payments", "email_outbox",
+]
+
 
 with app.app_context():
+    db.session.execute(text("SELECT 1"))
+    existing = set(inspect(db.engine).get_table_names())
+    missing = [table for table in REQUIRED_TABLES if table not in existing]
 
-    db.create_all()
+    if missing:
+        raise SystemExit(
+            "Missing database tables: " + ", ".join(missing)
+            + ". Run db/migration_appointments_and_catalog.sql first."
+        )
 
-    if Category.query.count() == 0:
-
-        categories = [
-            Category(name="Electronics"),
-            Category(name="Fashion"),
-            Category(name="Home"),
-            Category(name="Accessories")
-        ]
-
-        db.session.add_all(categories)
-        db.session.commit()
-
-    if Product.query.count() == 0:
-
-        electronics = Category.query.filter_by(
-            name="Electronics"
-        ).first()
-
-        products = [
-            Product(
-                name="Wireless Headphones",
-                description="Bluetooth headphones",
-                price=4990,
-                stock=20,
-                category_id=electronics.id
-            ),
-            Product(
-                name="Smart Watch",
-                description="Smart watch",
-                price=7990,
-                stock=15,
-                category_id=electronics.id
-            )
-        ]
-
-        db.session.add_all(products)
-        db.session.commit()
-
-    print("Database initialized successfully!")
+    print("Database connection and required tables verified.")
