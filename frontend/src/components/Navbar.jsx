@@ -142,11 +142,12 @@ export default function Navbar() {
     <nav className="navbar navbar-expand-lg bg-white sticky-top border-bottom">
       <div className="container py-2">
 
+        {/* Nirrojan Cosmetics Brand */}
         <Link
           className="navbar-brand brand"
           to={user ? "/home" : "/login"}
         >
-          blush <span>& bloom.</span>
+          NIRROJAN <span>COSMETICS</span>
         </Link>
 
         <button
@@ -183,7 +184,6 @@ export default function Navbar() {
 
                 {/* Notification dropdown */}
                 <div className="position-relative">
-
                   <button
                     type="button"
                     className="btn nav-icon position-relative border-0"
@@ -209,7 +209,6 @@ export default function Navbar() {
                         zIndex: 1100
                       }}
                     >
-
                       {!selectedNotification ? (
                         <>
                           <div className="d-flex justify-content-between align-items-center mb-3">
@@ -237,7 +236,6 @@ export default function Navbar() {
                           )}
 
                           <div style={{ maxHeight: "350px", overflowY: "auto" }}>
-
                             {notificationLoading ? (
                               <p className="text-muted text-center py-3">
                                 Loading notifications...
@@ -291,7 +289,6 @@ export default function Navbar() {
                                 </button>
                               ))
                             )}
-
                           </div>
                         </>
                       ) : (
@@ -342,7 +339,6 @@ export default function Navbar() {
                           </button>
                         </>
                       )}
-
                     </div>
                   )}
                 </div>
@@ -385,7 +381,6 @@ export default function Navbar() {
                   </button>
 
                   <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0">
-
                     <li>
                       <Link className="dropdown-item" to="/profile">
                         <i className="bi bi-person me-2"></i>
@@ -426,10 +421,8 @@ export default function Navbar() {
                         Logout
                       </button>
                     </li>
-
                   </ul>
                 </div>
-
               </div>
             </>
           )}
@@ -451,7 +444,6 @@ export default function Navbar() {
               </Link>
             </div>
           )}
-
         </div>
       </div>
     </nav>

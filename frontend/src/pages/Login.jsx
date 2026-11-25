@@ -30,27 +30,38 @@ export default function Login() {
   return (
     <div className="auth-page container py-5">
       <div className="auth-card row g-0 mx-auto">
+
         <div className="col-md-5 auth-photo">
           <div>
-            <span className="eyebrow">WELCOME TO YOUR HAPPY PLACE</span>
+            <span className="eyebrow">WELCOME TO NIRROJAN COSMETICS</span>
             <h1>Feel good.<br />Look after you.</h1>
-            <p>Thoughtful beauty essentials for everyday rituals.</p>
+            <p>
+              Thoughtful beauty essentials for your everyday rituals.
+            </p>
+            <p className="small mt-4">
+              Beauty • Care • Confidence
+            </p>
           </div>
         </div>
 
         <div className="col-md-7 p-4 p-lg-5">
-          <span className="eyebrow">YOUR ACCOUNT</span>
+          <span className="eyebrow">NIRROJAN COSMETICS</span>
+
           <h2 className="section-title mt-2">Welcome back</h2>
+
           <p className="text-muted mb-4">
             Sign in to explore our beauty collection.
           </p>
 
           {error && (
-            <div className="alert alert-danger py-2">{error}</div>
+            <div className="alert alert-danger py-2">
+              {error}
+            </div>
           )}
 
           <form onSubmit={submit}>
             <label className="form-label">Email address</label>
+
             <input
               className="form-control form-control-lg mb-3"
               type="email"
@@ -61,6 +72,7 @@ export default function Login() {
             />
 
             <label className="form-label">Password</label>
+
             <input
               className="form-control form-control-lg mb-4"
               type="password"
@@ -76,6 +88,7 @@ export default function Login() {
               disabled={loading}
             >
               {loading ? "Signing in..." : "Sign in"}
+
               {!loading && (
                 <i className="bi bi-arrow-right ms-2"></i>
               )}
@@ -88,7 +101,12 @@ export default function Login() {
               Create an account
             </Link>
           </p>
+
+          <p className="text-center text-muted small mt-4 mb-0">
+            © {new Date().getFullYear()} Nirrojan Cosmetics
+          </p>
         </div>
+
       </div>
     </div>
   );
