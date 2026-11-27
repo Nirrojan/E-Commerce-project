@@ -1,5 +1,4 @@
-
-"""Amazon MQ for RabbitMQ publisher (AMQPS/TLS) or local RabbitMQ publisher."""
+"""Publisher for Amazon MQ for RabbitMQ (AMQPS/TLS) or local RabbitMQ."""
 
 import json
 import logging
@@ -22,12 +21,10 @@ def rabbitmq_enabled():
 
 def connection_parameters():
     """Create RabbitMQ connection parameters."""
-
     if not rabbitmq_enabled():
         raise RuntimeError("RabbitMQ is disabled")
 
     host = os.getenv("RABBITMQ_HOST")
-
     if not host:
         raise RuntimeError("RABBITMQ_HOST is not configured")
 
@@ -41,7 +38,6 @@ def connection_parameters():
     ).lower() in {"1", "true", "yes"}
 
     credentials = pika.PlainCredentials(username, password)
-
     ssl_options = None
 
     if tls_enabled:
@@ -62,31 +58,31 @@ def connection_parameters():
     )
 
 
-def publish_booking_email(payload):
-    """Publish an appointment email event to RabbitMQ."""
-
+def publish_email_event(payload):
+    """Publish any supported email event to the durable email queue."""
     if not rabbitmq_enabled():
         logger.info("RabbitMQ is disabled. Skipping email publishing.")
         return False
 
+    if not isinstance(payload, dict):
+        logger.error("Email payload must be a dictionary")
+        return False
+
     connection = None
-
     try:
-        connection = pika.BlockingConnection(
-            connection_parameters()
-        )
-
+        connection = pika.BlockingConnection(connection_parameters())
         channel = connection.channel()
+        channel.confirm_delivery()
 
         channel.queue_declare(
             queue=QUEUE_NAME,
-            durable=True
+            durable=True,
         )
 
         channel.basic_publish(
             exchange="",
             routing_key=QUEUE_NAME,
-            body=json.dumps(payload).encode("utf-8"),
+            body=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
             properties=pika.BasicProperties(
                 delivery_mode=2,
                 content_type="application/json",
@@ -95,18 +91,19 @@ def publish_booking_email(payload):
         )
 
         logger.info(
-            "Published booking email event: %s",
-            payload.get("appointment_id")
+            "Published email event type=%s",
+            payload.get("type") or payload.get("event_type"),
         )
-
         return True
 
     except Exception:
-        logger.exception(
-            "Could not publish booking email to Amazon MQ/RabbitMQ"
-        )
+        logger.exception("Could not publish email event to RabbitMQ")
         return False
 
     finally:
         if connection and connection.is_open:
             connection.close()
+
+
+# Backwards-compatible name for existing imports.
+publish_booking_email = publish_email_event

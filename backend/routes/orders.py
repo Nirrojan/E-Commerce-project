@@ -11,7 +11,8 @@ from models import (
     Order,
     OrderItem,
     ProductPayment,
-    Notification
+    Notification,
+    EmailOutbox,
 )
 
 orders_bp = Blueprint("orders", __name__)
@@ -283,6 +284,46 @@ def simulate_product_payment(order_id):
             is_read=False
         ))
 
+        # Create the email event in the same transaction as the order
+        # confirmation, payment record, stock updates and notification.
+        customer = order.user
+
+        if customer and customer.email:
+            email_items = []
+
+            for item in order_items:
+                unit_price = Decimal(str(item.price))
+                line_total = unit_price * item.quantity
+
+                email_items.append({
+                    "product_name": item.product_name,
+                    "quantity": item.quantity,
+                    "unit_price": f"{unit_price:.2f}",
+                    "line_total": f"{line_total:.2f}",
+                })
+
+            db.session.add(
+                EmailOutbox(
+                    event_type="product_order_confirmation",
+                    payload={
+                        "type": "product_order_confirmation",
+                        "to": customer.email,
+                        "customer_name": customer.name,
+                        "order_id": order.id,
+                        "items": email_items,
+                        "total_amount": (
+                            f"{Decimal(str(order.total_amount)):.2f}"
+                        ),
+                        "currency": "LKR",
+                        "shipping_address": order.shipping_address,
+                        "transaction_reference": payment.transaction_reference,
+                        "order_status": order.status,
+                        "payment_mode": "simulated_demo",
+                    },
+                )
+            )
+
+        # One commit keeps all order-confirmation records consistent.
         db.session.commit()
 
         return jsonify({
